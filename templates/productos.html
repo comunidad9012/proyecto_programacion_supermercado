@@ -1,0 +1,37 @@
+{% extends './layout.html' %}
+{% block tittle %}probando{% endblock %}
+{% block body %}
+<div class="container text-center mt-4">
+    <h1 class="display-4">Productos</h1>
+</div>
+<div class="container text-center mt-4">
+    {%for x in db%}
+    <div class="row mb-4">
+        {%for y in x%}
+        <div class="col-md-4">
+            <div class="card h-100">
+                <img src="{{ y[-1] }}" class="card-img-top" alt="...">
+                <div class="card-body">
+                    {%if y[0] in botones%}
+                    <h6>Agregado al carrito</h6>
+                    {%else%}
+                    <form method="POST" action="/agregar_al_carrito">
+                        <h2>{{ y[1] }}</h2>
+                        <h2>${{y[2]}}</h2>
+                        <input type="hidden" name="precio" value="{{ y[2] }}">
+                        <div class="form-floating mb-3">
+                            <input type="number" class="form-control" name="cantidad" value="1" min="1" id="cantidad">
+                            <label for="cantidad">Cantidad</label>
+                        </div>
+                        <input type="hidden" name="id_producto" value="{{ y[0] }}">
+                        <button type="submit" class="btn btn-primary mx-2">Agregar al carrito</button>
+                    </form>
+                    {%endif%}
+                </div>
+            </div>
+        </div>
+        {%endfor%}
+    </div>
+    {%endfor%}  
+</div>
+{% endblock %}

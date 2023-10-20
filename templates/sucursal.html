@@ -1,0 +1,26 @@
+{% extends './layout.html' %}
+{% block tittle %}probando{% endblock %}
+{% block body %}
+<div class="container text-center">
+    {%for x in db%}
+    <div class="row">
+        <div class="col">
+            <div class="card mb-3" style="max-width: 840px;">
+                <div class="row g-0">
+                    <div class="col-md-4">
+                        <img src="{{ x[-1] }}" class="img-fluid rounded-start" alt="...">
+                    </div>
+                    <div class="col-md-8">
+                        <div class="card-body">
+                            <h1>Direccion: {{x[1]}}</h1>
+                            <h1>Telefono: {{x[2]}}</h1>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {%endfor%}
+</div>
+
+{% endblock %}
