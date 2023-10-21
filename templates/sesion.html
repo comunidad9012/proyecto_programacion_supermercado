@@ -1,0 +1,12 @@
+{% extends './layout.html' %}
+{% block tittle %}probando{% endblock %}
+{% block body %}
+<form action="/validar_inicio" method="GET">
+    <div class="mb-3">
+      <label for="dni" class="form-label">N° DNI:</label>
+      <input type="number" class="form-control" id="dni" name="dni" required>
+      <div id="emailHelp" class="form-text">We'll never share your email with anyone else.</div>
+    </div>
+    <button type="submit" class="btn btn-primary">Iniciar sesion</button>
+</form>
+{% endblock %}
