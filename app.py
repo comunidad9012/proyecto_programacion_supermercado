@@ -1,3 +1,4 @@
+# waitress-serve --listen=127.0.0.1:8000 app:app
 from apiwsgi import Wsgiclass
 from jinja2 import Environment, FileSystemLoader
 from webob import Request, Response
@@ -10,6 +11,21 @@ template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 env = Environment(loader=FileSystemLoader(template_dir))
     
 app = Wsgiclass()
+
+class Sesion:
+    def __init__(self):
+        pass
+    
+    def obtener_id_usuario(self,dni):
+        try:
+            conexion1=mysql.connector.connect(host="localhost",user="julian",password="123456789",database="bd_practica")
+            cursor1=conexion1.cursor()
+            query=f"select * from cliente where dni_cliente={dni};"
+            cursor1.execute(query)
+            conexion1.commit()
+        except Exception as e:
+            print("Error MySQL:", str(e))
+        #Seguir intentado hacer un registro de sesiones
 
 class Carrito:
     def __init__(self):
