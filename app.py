@@ -25,6 +25,7 @@ class Sesion:
             self.datos = cursor1.fetchone()
             self.acceso=True
             conexion1.commit()
+            print(self.datos)
         except Exception as e:
             print("Error MySQL:", str(e))
             self.datos=None
@@ -33,8 +34,6 @@ class Sesion:
             conexion1.close()
         return self.datos
        
-usuario=Sesion()
-
 class Carrito:
     def __init__(self):
         self.articulos=[]
@@ -81,6 +80,8 @@ class Carrito:
         except Exception as e:
             print("Error MySQL:", str(e))
         
+mi_carrito=Carrito()
+usuario=Sesion()
 
 def ordenar_productos(tabla):
     contador=0
@@ -98,8 +99,6 @@ def ordenar_productos(tabla):
     if columna:
         db.append(columna)
     return db
-
-mi_carrito=Carrito()
 
 def categorias(request, response, env):
     try:
@@ -164,11 +163,17 @@ def inicio(request, response):
     marcas(request, response, env)
     productos_carrito(request, response, env)
     contador_carrito(request,response,env)
-    template = env.get_template("sesion.html")
-    rendered_html = template.render()
-    response=Response()
-    response.text = rendered_html
-    return response
+    if usuario.acceso==False:
+        template = env.get_template("sesion.html")
+        rendered_html = template.render()
+        response=Response()
+        response.text = rendered_html
+        return response
+    else:
+        response=Response()
+        response.status_code = 302
+        response.headers['Location'] = '/home'
+        return response
     
 
 @app.ruta('/validar_inicio', methods=['GET'])
