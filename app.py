@@ -9,7 +9,7 @@ import datetime
 
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 env = Environment(loader=FileSystemLoader(template_dir))
-    
+
 app = Wsgiclass()
 
 class Sesion:
@@ -23,7 +23,8 @@ class Sesion:
             query=f"select * from cliente where dni_cliente={dni};"
             cursor1.execute(query)
             self.datos = cursor1.fetchone()
-            self.acceso=True
+            if self.datos!=None:
+                self.acceso=True
             conexion1.commit()
             print(self.datos)
         except Exception as e:
@@ -68,6 +69,7 @@ class Carrito:
             total=0
             for x in self.articulos:
                 total+=(x[1]*x[2])
+                total=round(total,2)
             return total
     
     def registrar_compra(self,medio_pago,total_venta,fecha):
@@ -173,6 +175,20 @@ def inicio(request, response):
         response=Response()
         response.status_code = 302
         response.headers['Location'] = '/home'
+        return response
+
+@app.ruta("/cuenta")
+def cuenta(request,response):
+    categorias(request, response, env)
+    marcas(request, response, env)
+    productos_carrito(request, response, env)
+    contador_carrito(request,response,env)
+    if usuario.acceso==True:
+        template = env.get_template("usuario.html")
+        db=usuario.datos
+        rendered_html = template.render(db=db)
+        response=Response()
+        response.text = rendered_html
         return response
     
 

@@ -1,0 +1,49 @@
+{% extends './layout.html' %}
+{% block tittle %}probando{% endblock %}
+{% block body %}
+<div class="container text-center mt-4">
+  <form action="/registrar_usuario" method="GET">
+    <div class="row  mx-auto d-flex justify-content-center align-items-center">
+      <div class="col-md-3">
+        <label for="nombre" class="form-label">Nombre</label>
+        <input type="text" class="form-control" id="nombre">
+      </div>
+      <div class="col-md-3"> 
+        <label for="apellido" class="form-label">Apellido</label>
+        <input type="text" class="form-control" id="apellido">
+      </div>
+    </div>
+    <div class="row  mx-auto d-flex justify-content-center align-items-center">
+      <div class="col-md-3">
+        <label for="dni" class="form-label">DNI</label>
+        <input type="number" class="form-control" id="dni">
+      </div>
+      <div class="col-md-3"> 
+        <label for="telefono" class="form-label">Telefono</label>
+        <input type="number" class="form-control" id="telefono">
+      </div>
+    </div>
+    <div class="row mt-2 mx-auto d-flex justify-content-center align-items-center">
+      <div class="col-md-4">
+        <label for="calle" class="form-label">Calle</label>
+        <input type="text" class="form-control" id="calle">
+      </div>
+      <div class="col-md-2">
+        <label for="numcalle" class="form-label">N° Calle</label>
+        <input type="number" class="form-control" id="numcalle">
+      </div>
+    </div>
+    <div class="row mt-2 mx-auto d-flex justify-content-center align-items-center">
+      <div class="col-md-6">
+        <label for="correo" class="form-label">Correo electronico</label>
+        <input type="email" class="form-control" id="correo">
+      </div>
+    </div>
+    <div class="row mt-4 mx-auto d-flex justify-content-center align-items-center">
+      <div class="col-12">
+        <button type="submit" class="btn btn-primary">Registrarse</button>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}
