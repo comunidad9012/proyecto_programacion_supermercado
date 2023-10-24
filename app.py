@@ -25,6 +25,7 @@ class Sesion:
             self.datos = cursor1.fetchone()
             if self.datos!=None:
                 self.acceso=True
+                self.id_usuario=self.datos[0]
             conexion1.commit()
             print(self.datos)
         except Exception as e:
@@ -34,7 +35,55 @@ class Sesion:
             cursor1.close()
             conexion1.close()
         return self.datos
-       
+    
+    def modificar_datos_usuario(self,nombre,apellido,calle,ncalle,dni,correo,telefono):
+        nombre=nombre.title()
+        apellido=apellido.title()
+        calle=calle.title()
+        try:
+            conexion1=mysql.connector.connect(host="localhost",user="julian",password="123456789",database="bd_practica")
+            cursor1=conexion1.cursor()
+            query=f"UPDATE `cliente` SET `nom_cliente` = '{nombre}',`ap_cliente` = '{apellido}',`calle_cliente` = '{calle}',`ncalle_cliente` = '{ncalle}',`dni_cliente` = '{dni}',`correo_cliente` = '{correo}',`telefono_cliente` = '{telefono}'WHERE (`id_cliente` = '{self.id_usuario}');"
+            cursor1.execute(query)
+            conexion1.commit()
+            query=f"select * from cliente where id_cliente={self.id_usuario};"
+            cursor1.execute(query)
+            self.datos = cursor1.fetchone()
+            print(self.datos)
+        except Exception as e:
+            print("Error MySQL:", str(e))
+        finally:
+            cursor1.close()
+            conexion1.close()
+    
+    def historial_usuario(self):
+        try:
+            conexion1=mysql.connector.connect(host="localhost",user="julian",password="123456789",database="bd_practica")
+            cursor1=conexion1.cursor()
+            query=f"select * from detalle_pedido inner join pedido on id_pedido=codigo_pedido inner join producto on codigo=codigo_producto where pedido.cliente_pedido={self.id_usuario};"
+            cursor1.execute(query)
+            self.historial=[]
+            pedido_act=None
+            articulos_pedido=[]
+            for x in cursor1:
+                if pedido_act==None:
+                    pedido_act=x[2]
+                if x[2]==pedido_act:
+                    articulos_pedido.append(x)
+                else:
+                    self.historial.append(articulos_pedido)
+                    articulos_pedido=[x]
+                    pedido_act=x[2]
+            if articulos_pedido:
+                self.historial.append(articulos_pedido)
+            conexion1.commit()
+            print(self.historial)
+        except Exception as e:
+            print("Error MySQL:", str(e))
+        finally:
+            cursor1.close()
+            conexion1.close()
+        
 class Carrito:
     def __init__(self):
         self.articulos=[]
@@ -189,6 +238,75 @@ def cuenta(request,response):
         rendered_html = template.render(db=db)
         response=Response()
         response.text = rendered_html
+        return response
+    else:
+        response=Response()
+        response.status_code = 302
+        response.headers['Location'] = '/'
+        return response
+
+@app.ruta("/editar_usuario")
+def cuenta(request,response):
+    categorias(request, response, env)
+    marcas(request, response, env)
+    productos_carrito(request, response, env)
+    contador_carrito(request,response,env)
+    if usuario.acceso==True:
+        template = env.get_template("editar_usuario.html")
+        db=usuario.datos
+        rendered_html = template.render(db=db)
+        response=Response()
+        response.text = rendered_html
+        return response
+    else:
+        response=Response()
+        response.status_code = 302
+        response.headers['Location'] = '/'
+        return response
+
+@app.ruta('/confirmar_cambios', methods=['POST'])
+def confirmar_cambios(request,response):
+    if usuario.acceso==True:
+        categorias(request, response, env)
+        marcas(request, response, env)
+        contador_carrito(request,response,env)
+        productos_carrito(request, response, env)
+        nombre=request.POST.get('nombre')
+        apellido=request.POST.get('apellido')
+        calle=request.POST.get('calle')
+        ncalle=request.POST.get('numcalle')
+        dni=request.POST.get('dni')
+        correo=request.POST.get('correo')
+        telefono=request.POST.get('telefono')
+        usuario.modificar_datos_usuario(nombre,apellido,calle,ncalle,dni,correo,telefono)
+        response=Response()
+        response.status_code = 302
+        response.headers['Location'] = '/cuenta'
+        return response
+    else:
+        response=Response()
+        response.status_code = 302
+        response.headers['Location'] = '/'
+        return response
+    
+@app.ruta("/historial_de_compras")
+def historial_compras(request,response):
+    categorias(request, response, env)
+    marcas(request, response, env)
+    productos_carrito(request, response, env)
+    contador_carrito(request,response,env)
+    if usuario.acceso==True:
+        template = env.get_template("historial.html")
+        usuario.historial_usuario()
+        db=usuario.historial
+        rendered_html = template.render(db=db)
+        response=Response()
+        response.text = rendered_html
+        return response
+    else:
+        response=Response()
+        response.status_code = 302
+        response.headers['Location'] = '/'
         return response
     
 

@@ -1,0 +1,60 @@
+{% extends './layout.html' %}
+{% block tittle %}probando{% endblock %}
+{% block body %}
+<div class="container text-center mt-4">
+    <ul class="nav nav-tabs justify-content-center">
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="/cuenta">Datos de usuario</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Historial de compras</a>
+        </li>
+    </ul>
+</div>
+<div class="container text-center mt-4">
+    <h3>Modificar datos</h3>
+    <form action="/confirmar_cambios" method="POST">
+      <div class="row  mx-auto d-flex justify-content-center align-items-center">
+        <div class="col-md-3">
+          <label for="nombre" class="form-label">Nombre</label>
+          <input type="text" class="form-control" id="nombre" name="nombre" value="{{db[1]}}" required>
+        </div>
+        <div class="col-md-3"> 
+          <label for="apellido" class="form-label">Apellido</label>
+          <input type="text" class="form-control" id="apellido" name="apellido" value="{{db[2]}}" required>
+        </div>
+      </div>
+      <div class="row  mx-auto d-flex justify-content-center align-items-center">
+        <div class="col-md-3">
+          <label for="dni" class="form-label">DNI</label>
+          <input type="number" class="form-control" id="dni" name="dni" value="{{db[5]}}" required>
+        </div>
+        <div class="col-md-3"> 
+          <label for="telefono" class="form-label">Telefono</label>
+          <input type="number" class="form-control" id="telefono" name="telefono" value="{{db[7]}}" required>
+        </div>
+      </div>
+      <div class="row mt-2 mx-auto d-flex justify-content-center align-items-center">
+        <div class="col-md-4">
+          <label for="calle" class="form-label">Calle</label>
+          <input type="text" class="form-control" id="calle" name="calle" value="{{db[3]}}" required>
+        </div>
+        <div class="col-md-2">
+          <label for="numcalle" class="form-label">N° Calle</label>
+          <input type="number" class="form-control" id="numcalle" name="numcalle" value="{{db[4]}}" required>
+        </div>
+      </div>
+      <div class="row mt-2 mx-auto d-flex justify-content-center align-items-center">
+        <div class="col-md-6">
+          <label for="correo" class="form-label">Correo electronico</label>
+          <input type="email" class="form-control" id="correo" name="correo" value="{{db[6]}}" required>
+        </div>
+      </div>
+      <div class="row mt-4 mx-auto d-flex justify-content-center align-items-center">
+        <div class="col-12">
+          <button type="submit" class="btn btn-primary">Guardar cambios</button>
+        </div>
+      </div>
+    </form>
+  </div>
+{% endblock %}
