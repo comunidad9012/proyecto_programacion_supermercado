@@ -77,12 +77,14 @@ class Sesion:
             if articulos_pedido:
                 self.historial.append(articulos_pedido)
             conexion1.commit()
-            print(self.historial)
         except Exception as e:
             print("Error MySQL:", str(e))
         finally:
             cursor1.close()
             conexion1.close()
+        
+    def cerrar_sesion(self):
+        self.acceso=False
         
 class Carrito:
     def __init__(self):
@@ -245,6 +247,22 @@ def cuenta(request,response):
         response.headers['Location'] = '/'
         return response
 
+@app.ruta("/cerrar_sesion",methods=['POST'])
+def cerrar_sesion_actual(request,response):
+    if usuario.acceso==True:
+        x=request.POST.get('cerrar_sesion')
+        if x=="1":
+            usuario.cerrar_sesion()
+            response=Response()
+            response.status_code = 302
+            response.headers['Location'] = '/'
+            return response
+    else:
+        response=Response()
+        response.status_code = 302
+        response.headers['Location'] = '/'
+        return response
+
 @app.ruta("/editar_usuario")
 def cuenta(request,response):
     categorias(request, response, env)
@@ -267,10 +285,6 @@ def cuenta(request,response):
 @app.ruta('/confirmar_cambios', methods=['POST'])
 def confirmar_cambios(request,response):
     if usuario.acceso==True:
-        categorias(request, response, env)
-        marcas(request, response, env)
-        contador_carrito(request,response,env)
-        productos_carrito(request, response, env)
         nombre=request.POST.get('nombre')
         apellido=request.POST.get('apellido')
         calle=request.POST.get('calle')
@@ -312,10 +326,6 @@ def historial_compras(request,response):
 
 @app.ruta('/validar_inicio', methods=['GET'])
 def validar_inicio(request,response):
-    categorias(request, response, env)
-    marcas(request, response, env)
-    contador_carrito(request,response,env)
-    productos_carrito(request, response, env)
     dni=request.GET.get('dni')
     user=usuario.validar_usuario(dni)
     if user:
@@ -483,10 +493,6 @@ def filtro_marca(request,response):
 @app.ruta('/agregar_al_carrito', methods=['POST'])
 def agregar_al_carrito(request,response):
     if usuario.acceso==True:
-        categorias(request, response, env)
-        marcas(request, response, env)
-        contador_carrito(request,response,env)
-        productos_carrito(request, response, env)
         id_producto = request.POST.get('id_producto')
         cantidad = int(request.POST.get('cantidad'))
         precio=float(request.POST.get('precio'))
@@ -504,10 +510,6 @@ def agregar_al_carrito(request,response):
 @app.ruta('/eliminar_del_carrito', methods=['POST'])
 def eliminar_del_carrito(request,response):
     if usuario.acceso==True:
-        categorias(request, response, env)
-        marcas(request, response, env)
-        contador_carrito(request,response,env)
-        productos_carrito(request, response, env)
         id_producto = request.POST.get('id_producto')
         mi_carrito.eliminar_producto(id_producto)
         response=Response()
