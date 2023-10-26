@@ -11,20 +11,36 @@
         </li>
     </ul>
 </div>
+
 <div class="container text-center mt-4">
   <div class="accordion" id="accordionExample">
     {% for x in db %}
     <div class="accordion-item">
       <h2 class="accordion-header">
         <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ loop.index }}" aria-expanded="false" aria-controls="collapse{{ loop.index }}">
-          Pedido #{{ loop.index }}
+          Pedido #{{ loop.index }} {{x[loop.index - 1][6]}} {{x[loop.index - 1][5]}} {{x[loop.index - 1][7]}}
         </button>
       </h2>
       <div id="collapse{{ loop.index }}" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
         <div class="accordion-body">
-          {% for y in x %}
-          <p>{{ y[9:] }}</p>
-          {% endfor %}
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th scope="col">Producto</th>
+                <th scope="col">Cantidad</th>
+                <th scope="col">$</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for y in x %}
+              <tr>
+                <td>{{y[2]}}</td>
+                <td>{{y[3]}}</td>
+                <td>{{y[4]}}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

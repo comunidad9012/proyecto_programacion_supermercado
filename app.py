@@ -1,4 +1,5 @@
 # waitress-serve --listen=127.0.0.1:8000 app:app
+#enviar los datos con la url en un href
 from apiwsgi import Wsgiclass
 from jinja2 import Environment, FileSystemLoader
 from webob import Request, Response
@@ -6,9 +7,11 @@ from whitenoise import WhiteNoise
 import os
 import mysql.connector
 import datetime
+import random
 
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 env = Environment(loader=FileSystemLoader(template_dir))
+conexion1=mysql.connector.connect(host="localhost",user="julian",password="123456789",database="bd_practica")
 
 app = Wsgiclass()
 
@@ -36,6 +39,20 @@ class Sesion:
             conexion1.close()
         return self.datos
     
+    def registro_nuevo(self,nombre,apellido,calle,ncalle,dni,correo,telefono):
+        try:
+            conexion1=mysql.connector.connect(host="localhost",user="julian",password="123456789",database="bd_practica")
+            cursor1=conexion1.cursor()
+            query=f"INSERT INTO `bd_practica`.`cliente` (`nom_cliente`, `ap_cliente`, `calle_cliente`, `ncalle_cliente`, `dni_cliente`, `correo_cliente`, `telefono_cliente`) VALUES ('{nombre}', '{apellido}', '{calle}', '{ncalle}', '{dni}', '{correo}', '{telefono}');"
+            cursor1.execute(query)
+            conexion1.commit()
+            self.validar_usuario(dni)
+        except Exception as e:
+            print("Error MySQL:", str(e))
+        finally:
+            cursor1.close()
+            conexion1.close()
+        
     def modificar_datos_usuario(self,nombre,apellido,calle,ncalle,dni,correo,telefono):
         nombre=nombre.title()
         apellido=apellido.title()
@@ -60,20 +77,20 @@ class Sesion:
         try:
             conexion1=mysql.connector.connect(host="localhost",user="julian",password="123456789",database="bd_practica")
             cursor1=conexion1.cursor()
-            query=f"select * from detalle_pedido inner join pedido on id_pedido=codigo_pedido inner join producto on codigo=codigo_producto where pedido.cliente_pedido={self.id_usuario};"
+            query=f"select codigo_producto,codigo_pedido,nombre,cantidad_producto,precio_producto,estado_pedido,fecha_venta,total_venta from detalle_pedido inner join pedido on id_pedido=codigo_pedido inner join producto on codigo=codigo_producto inner join venta on num_factura=num_factura_pedido where pedido.cliente_pedido={self.id_usuario};"
             cursor1.execute(query)
             self.historial=[]
             pedido_act=None
             articulos_pedido=[]
             for x in cursor1:
                 if pedido_act==None:
-                    pedido_act=x[2]
-                if x[2]==pedido_act:
+                    pedido_act=x[1]
+                if x[1]==pedido_act:
                     articulos_pedido.append(x)
                 else:
                     self.historial.append(articulos_pedido)
                     articulos_pedido=[x]
-                    pedido_act=x[2]
+                    pedido_act=x[1]
             if articulos_pedido:
                 self.historial.append(articulos_pedido)
             conexion1.commit()
@@ -89,6 +106,7 @@ class Sesion:
 class Carrito:
     def __init__(self):
         self.articulos=[]
+        self.sucursal=None
     
     def agregar_producto(self,id_producto,cantidad,precio):
         total_prod=cantidad*precio
@@ -130,8 +148,24 @@ class Carrito:
             query=f"INSERT INTO `bd_practica`.`venta` (`fecha_venta`, `total_venta`, `medio_pago_venta`) VALUES ('{fecha}', '{total_venta}', '{medio_pago}');"
             cursor1.execute(query)
             conexion1.commit()
+            self.id_venta=cursor1.lastrowid
+            if self.sucursal is None:
+                lista=[1,2,3]
+                self.sucursal=random.choice(lista)
+            query=f"INSERT INTO `bd_practica`.`pedido` (`estado_pedido`, `cliente_pedido`, `num_factura_pedido`, `sucursal_pedido`) VALUES ('en proceso', '{usuario.id_usuario}', '{self.id_venta}', '{self.sucursal}');"
+            cursor1.execute(query)
+            conexion1.commit()
+            self.id_pedido=cursor1.lastrowid
+            for x in self.articulos:
+                query=f"INSERT INTO `bd_practica`.`detalle_pedido` (`codigo_producto`, `codigo_pedido`) VALUES ('{x[0]}', '{self.id_pedido}');"
+                cursor1.execute(query)
+                conexion1.commit()
+            self.articulos=[]
         except Exception as e:
             print("Error MySQL:", str(e))
+        finally:
+            cursor1.close()
+            conexion1.close()
         
 mi_carrito=Carrito()
 usuario=Sesion()
@@ -227,6 +261,39 @@ def inicio(request, response):
         response.status_code = 302
         response.headers['Location'] = '/home'
         return response
+
+@app.ruta("/registro")
+def registro_usuario(request,response):
+    categorias(request, response, env)
+    marcas(request, response, env)
+    productos_carrito(request, response, env)
+    contador_carrito(request,response,env)
+    if usuario.acceso==False:
+        template = env.get_template("registro.html")
+        rendered_html = template.render()
+        response=Response()
+        response.text = rendered_html
+        return response
+    else:
+        response=Response()
+        response.status_code = 302
+        response.headers['Location'] = '/home'
+        return response
+
+@app.ruta("/proceso_registro",methods=['POST'])
+def procesar_registro(request,response):
+    nombre=request.POST.get('nombre')
+    apellido=request.POST.get('apellido')
+    calle=request.POST.get('calle')
+    ncalle=request.POST.get('numcalle')
+    dni=request.POST.get('dni')
+    correo=request.POST.get('correo')
+    telefono=request.POST.get('telefono')
+    usuario.registro_nuevo(nombre,apellido,calle,ncalle,dni,correo,telefono)
+    response=Response()
+    response.status_code = 302
+    response.headers['Location'] = '/home'
+    return response
 
 @app.ruta("/cuenta")
 def cuenta(request,response):
