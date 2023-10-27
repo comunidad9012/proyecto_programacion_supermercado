@@ -1,5 +1,6 @@
 # waitress-serve --listen=127.0.0.1:8000 app:app
 #enviar los datos con la url en un href
+#cambiar los for por fetchall
 from apiwsgi import Wsgiclass
 from jinja2 import Environment, FileSystemLoader
 from webob import Request, Response
@@ -79,10 +80,11 @@ class Sesion:
             cursor1=conexion1.cursor()
             query=f"select codigo_producto,codigo_pedido,nombre,cantidad_producto,precio_producto,estado_pedido,fecha_venta,total_venta from detalle_pedido inner join pedido on id_pedido=codigo_pedido inner join producto on codigo=codigo_producto inner join venta on num_factura=num_factura_pedido where pedido.cliente_pedido={self.id_usuario};"
             cursor1.execute(query)
+            prueba=cursor1.fetchall()
             self.historial=[]
             pedido_act=None
             articulos_pedido=[]
-            for x in cursor1:
+            for x in prueba:
                 if pedido_act==None:
                     pedido_act=x[1]
                 if x[1]==pedido_act:
@@ -157,7 +159,7 @@ class Carrito:
             conexion1.commit()
             self.id_pedido=cursor1.lastrowid
             for x in self.articulos:
-                query=f"INSERT INTO `bd_practica`.`detalle_pedido` (`codigo_producto`, `codigo_pedido`) VALUES ('{x[0]}', '{self.id_pedido}');"
+                query=f"INSERT INTO `bd_practica`.`detalle_pedido` (`codigo_producto`, `codigo_pedido`, `cantidad_producto`, `precio_producto`) VALUES ('{x[0]}', '{self.id_pedido}', '{x[1]}', '{x[2]}');"
                 cursor1.execute(query)
                 conexion1.commit()
             self.articulos=[]
@@ -369,7 +371,7 @@ def confirmar_cambios(request,response):
         response.status_code = 302
         response.headers['Location'] = '/'
         return response
-    
+
 @app.ruta("/historial_de_compras")
 def historial_compras(request,response):
     categorias(request, response, env)

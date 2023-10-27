@@ -18,7 +18,22 @@
     <div class="accordion-item">
       <h2 class="accordion-header">
         <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ loop.index }}" aria-expanded="false" aria-controls="collapse{{ loop.index }}">
-          Pedido #{{ loop.index }} {{x[loop.index - 1][6]}} {{x[loop.index - 1][5]}} {{x[loop.index - 1][7]}}
+          <div class="container text-center">
+            <div class="row  mx-auto d-flex justify-content-center align-items-center">
+              <div class="col-md-3">
+                <u>Pedido</u> #{{ loop.index }}
+              </div>
+              <div class="col-md-3">
+                <u>Fecha:</u> {{x[0][6]}} 
+              </div>
+              <div class="col-md-3">
+                <u>Estado:</u> "{{x[0][5]}}"
+              </div>
+              <div class="col-md-3">
+                <u>Total:</u> ${{x[0][7]}}
+              </div>
+            </div>
+          </div>
         </button>
       </h2>
       <div id="collapse{{ loop.index }}" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
@@ -28,7 +43,8 @@
               <tr>
                 <th scope="col">Producto</th>
                 <th scope="col">Cantidad</th>
-                <th scope="col">$</th>
+                <th scope="col">Precio</th>
+                <th scope="col">Total</th>
               </tr>
             </thead>
             <tbody>
@@ -37,6 +53,7 @@
                 <td>{{y[2]}}</td>
                 <td>{{y[3]}}</td>
                 <td>{{y[4]}}</td>
+                <td>{{y[3]*y[4]}}</td>
               </tr>
               {% endfor %}
             </tbody>
