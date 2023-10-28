@@ -1,6 +1,4 @@
 # waitress-serve --listen=127.0.0.1:8000 app:app
-#enviar los datos con la url en un href
-#cambiar los for por fetchall
 from apiwsgi import Wsgiclass
 from jinja2 import Environment, FileSystemLoader
 from webob import Request, Response
@@ -12,17 +10,21 @@ import random
 
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 env = Environment(loader=FileSystemLoader(template_dir))
-conexion1=mysql.connector.connect(host="localhost",user="julian",password="123456789",database="bd_practica")
+
+def conexion_db():
+    conexion1=mysql.connector.connect(host="localhost",user="julian",password="123456789",database="bd_practica")
+    return conexion1
 
 app = Wsgiclass()
 
 class Sesion:
     def __init__(self):
         self.acceso=False
+        self.administrador=False
     
     def validar_usuario(self,dni):
         try:
-            conexion1=mysql.connector.connect(host="localhost",user="julian",password="123456789",database="bd_practica")
+            conexion1=conexion_db()
             cursor1=conexion1.cursor()
             query=f"select * from cliente where dni_cliente={dni};"
             cursor1.execute(query)
@@ -30,6 +32,11 @@ class Sesion:
             if self.datos!=None:
                 self.acceso=True
                 self.id_usuario=self.datos[0]
+                query=f"select privilegios from cliente where dni_cliente={dni};"
+                cursor1.execute(query)
+                privilegio_cliente=cursor1.fetchone()
+                if privilegio_cliente[0]==1:
+                    self.administrador=True
             conexion1.commit()
             print(self.datos)
         except Exception as e:
@@ -42,7 +49,7 @@ class Sesion:
     
     def registro_nuevo(self,nombre,apellido,calle,ncalle,dni,correo,telefono):
         try:
-            conexion1=mysql.connector.connect(host="localhost",user="julian",password="123456789",database="bd_practica")
+            conexion1=conexion_db()
             cursor1=conexion1.cursor()
             query=f"INSERT INTO `bd_practica`.`cliente` (`nom_cliente`, `ap_cliente`, `calle_cliente`, `ncalle_cliente`, `dni_cliente`, `correo_cliente`, `telefono_cliente`) VALUES ('{nombre}', '{apellido}', '{calle}', '{ncalle}', '{dni}', '{correo}', '{telefono}');"
             cursor1.execute(query)
@@ -59,7 +66,7 @@ class Sesion:
         apellido=apellido.title()
         calle=calle.title()
         try:
-            conexion1=mysql.connector.connect(host="localhost",user="julian",password="123456789",database="bd_practica")
+            conexion1=conexion_db()
             cursor1=conexion1.cursor()
             query=f"UPDATE `cliente` SET `nom_cliente` = '{nombre}',`ap_cliente` = '{apellido}',`calle_cliente` = '{calle}',`ncalle_cliente` = '{ncalle}',`dni_cliente` = '{dni}',`correo_cliente` = '{correo}',`telefono_cliente` = '{telefono}'WHERE (`id_cliente` = '{self.id_usuario}');"
             cursor1.execute(query)
@@ -76,7 +83,7 @@ class Sesion:
     
     def historial_usuario(self):
         try:
-            conexion1=mysql.connector.connect(host="localhost",user="julian",password="123456789",database="bd_practica")
+            conexion1=conexion_db()
             cursor1=conexion1.cursor()
             query=f"select codigo_producto,codigo_pedido,nombre,cantidad_producto,precio_producto,estado_pedido,fecha_venta,total_venta from detalle_pedido inner join pedido on id_pedido=codigo_pedido inner join producto on codigo=codigo_producto inner join venta on num_factura=num_factura_pedido where pedido.cliente_pedido={self.id_usuario};"
             cursor1.execute(query)
@@ -104,6 +111,7 @@ class Sesion:
         
     def cerrar_sesion(self):
         self.acceso=False
+        self.administrador=False
         
 class Carrito:
     def __init__(self):
@@ -145,7 +153,7 @@ class Carrito:
     
     def registrar_compra(self,medio_pago,total_venta,fecha):
         try:
-            conexion1=mysql.connector.connect(host="localhost",user="julian",password="123456789",database="bd_practica")
+            conexion1=conexion_db()
             cursor1=conexion1.cursor()
             query=f"INSERT INTO `bd_practica`.`venta` (`fecha_venta`, `total_venta`, `medio_pago_venta`) VALUES ('{fecha}', '{total_venta}', '{medio_pago}');"
             cursor1.execute(query)
@@ -189,14 +197,18 @@ def ordenar_productos(tabla):
         db.append(columna)
     return db
 
+def rol_admin(request,response,env):
+    if usuario.administrador==True:
+        env.globals["administrador"]=1
+    else:
+        env.globals["administrador"]=0
+
 def categorias(request, response, env):
     try:
-        conexion1=mysql.connector.connect(host="localhost",user="julian",password="123456789",database="bd_practica")
+        conexion1=conexion_db()
         cursor1=conexion1.cursor()
         cursor1.execute("SELECT * FROM categoria;")
-        datos=[]
-        for x in cursor1:
-            datos.append(x)
+        datos=cursor1.fetchall()
         env.globals["categorias"]=datos
         cursor1.close()
         conexion1.close()
@@ -205,12 +217,10 @@ def categorias(request, response, env):
 
 def marcas(request, response, env):
     try:
-        conexion1=mysql.connector.connect(host="localhost",user="julian",password="123456789",database="bd_practica")
+        conexion1=conexion_db()
         cursor1=conexion1.cursor()
         cursor1.execute("SELECT * FROM marcas;")
-        datos=[]
-        for x in cursor1:
-            datos.append(x)
+        datos=cursor1.fetchall()
         env.globals["marcas"]=datos
         cursor1.close()
         conexion1.close()
@@ -219,12 +229,10 @@ def marcas(request, response, env):
 
 def medios_de_pago(request, response, env):
     try:
-        conexion1=mysql.connector.connect(host="localhost",user="julian",password="123456789",database="bd_practica")
+        conexion1=conexion_db()
         cursor1=conexion1.cursor()
         cursor1.execute("SELECT * FROM medio_pago;")
-        datos=[]
-        for x in cursor1:
-            datos.append(x)
+        datos=cursor1.fetchall()
         env.globals["medios_de_pago"]=datos
         cursor1.close()
         conexion1.close()
@@ -246,12 +254,14 @@ def productos_carrito(request, response, env):
             ids.append(int(x[0]))
         env.globals["botones"]=ids
 
+#----INICIO SESION-------
 @app.ruta("/")
 def inicio(request, response):
     categorias(request, response, env)
     marcas(request, response, env)
     productos_carrito(request, response, env)
     contador_carrito(request,response,env)
+    rol_admin(request,response,env)
     if usuario.acceso==False:
         template = env.get_template("sesion.html")
         rendered_html = template.render()
@@ -263,7 +273,28 @@ def inicio(request, response):
         response.status_code = 302
         response.headers['Location'] = '/home'
         return response
+# ----------VISTA ADMINISTRADOR-----------
 
+@app.ruta("/prueba")
+def inicio(request, response):
+    categorias(request, response, env)
+    marcas(request, response, env)
+    productos_carrito(request, response, env)
+    contador_carrito(request,response,env)
+    rol_admin(request,response,env)
+    if usuario.acceso==True and usuario.administrador==True:
+        template = env.get_template("admin.html")
+        rendered_html = template.render()
+        response=Response()
+        response.text = rendered_html
+        return response
+    else:
+        response=Response()
+        response.status_code = 302
+        response.headers['Location'] = '/home'
+        return response
+   
+# --------- VISTAS CLIENTE ---------------
 @app.ruta("/registro")
 def registro_usuario(request,response):
     categorias(request, response, env)
@@ -303,6 +334,7 @@ def cuenta(request,response):
     marcas(request, response, env)
     productos_carrito(request, response, env)
     contador_carrito(request,response,env)
+    rol_admin(request,response,env)
     if usuario.acceso==True:
         template = env.get_template("usuario.html")
         db=usuario.datos
@@ -338,6 +370,7 @@ def cuenta(request,response):
     marcas(request, response, env)
     productos_carrito(request, response, env)
     contador_carrito(request,response,env)
+    rol_admin(request,response,env)
     if usuario.acceso==True:
         template = env.get_template("editar_usuario.html")
         db=usuario.datos
@@ -378,6 +411,7 @@ def historial_compras(request,response):
     marcas(request, response, env)
     productos_carrito(request, response, env)
     contador_carrito(request,response,env)
+    rol_admin(request,response,env)
     if usuario.acceso==True:
         template = env.get_template("historial.html")
         usuario.historial_usuario()
@@ -415,13 +449,12 @@ def inicio(request, response):
         marcas(request, response, env)
         productos_carrito(request, response, env)
         contador_carrito(request,response,env)
+        rol_admin(request,response,env)
         try:
-            conexion1=mysql.connector.connect(host="localhost",user="julian",password="123456789",database="bd_practica")
+            conexion1=conexion_db()
             cursor1=conexion1.cursor()
             cursor1.execute("select codigo,nombre,precio,img_producto,tipo_descuento from producto inner join descuento on descuento_producto=id_descuento;")
-            tabla=[]
-            for x in cursor1:
-                tabla.append(x)
+            tabla=cursor1.fetchall()
         except Exception as e:
             print("Error MySQL:", str(e))
         descuento=[]
@@ -451,13 +484,12 @@ def mostrar_sucursales(request,response):
         marcas(request, response, env)
         contador_carrito(request,response,env)
         productos_carrito(request, response, env)
+        rol_admin(request,response,env)
         try:
-            conexion1=mysql.connector.connect(host="localhost",user="julian",password="123456789",database="bd_practica")
+            conexion1=conexion_db()
             cursor1=conexion1.cursor()
             cursor1.execute("select * from sucursal;")
-            tabla=[]
-            for x in cursor1:
-                tabla.append(x)
+            tabla=cursor1.fetchall()
         except Exception as e:
             print("Error MySQL:", str(e))
         template = env.get_template("sucursal.html")
@@ -478,13 +510,12 @@ def productos(request, response):
         categorias(request, response, env)
         marcas(request, response, env)
         contador_carrito(request,response,env)
+        rol_admin(request,response,env)
         try:
-            conexion1=mysql.connector.connect(host="localhost",user="julian",password="123456789",database="bd_practica")
+            conexion1=conexion_db()
             cursor1=conexion1.cursor()
             cursor1.execute("SELECT codigo,nombre,precio,img_producto FROM producto;")
-            tabla=[]
-            for x in cursor1:
-                tabla.append(x)
+            tabla=cursor1.fetchall()
         except Exception as e:
             print("Error MySQL:", str(e))
         db=ordenar_productos(tabla)
@@ -506,15 +537,14 @@ def filtro_categoria(request,response):
         marcas(request, response, env)
         productos_carrito(request, response, env)
         contador_carrito(request,response,env)
+        rol_admin(request,response,env)
         id_categoria=request.GET.get('id_categoria')
         try:
-            conexion1=mysql.connector.connect(host="localhost",user="julian",password="123456789",database="bd_practica")
+            conexion1=conexion_db()
             cursor1=conexion1.cursor()
             query=f'SELECT codigo,nombre,precio,img_producto FROM producto where categoria_producto={id_categoria};'
             cursor1.execute(query)
-            tabla=[]
-            for x in cursor1:
-                tabla.append(x)
+            tabla=cursor1.fetchall()
         except Exception as e:
             print("Error MySQL:", str(e))
         db=ordenar_productos(tabla)
@@ -536,15 +566,14 @@ def filtro_marca(request,response):
         marcas(request, response, env)
         contador_carrito(request,response,env)
         productos_carrito(request, response, env)
+        rol_admin(request,response,env)
         id_marca=request.GET.get('id_marca')
         try:
-            conexion1=mysql.connector.connect(host="localhost",user="julian",password="123456789",database="bd_practica")
+            conexion1=conexion_db()
             cursor1=conexion1.cursor()
             query=f'SELECT codigo,nombre,precio,img_producto FROM producto where marca={id_marca};'
             cursor1.execute(query)
-            tabla=[]
-            for x in cursor1:
-                tabla.append(x)
+            tabla=cursor1.fetchall()
         except Exception as e:
             print("Error MySQL:", str(e))
         db=ordenar_productos(tabla)
@@ -598,15 +627,14 @@ def buscar_producto(request,response):
         marcas(request, response, env)
         contador_carrito(request,response,env)
         productos_carrito(request, response, env)
+        rol_admin(request,response,env)
         buscar=request.GET.get('palabra_busqueda')
         try:
-            conexion1=mysql.connector.connect(host="localhost",user="julian",password="123456789",database="bd_practica")
+            conexion1=conexion_db()
             cursor1=conexion1.cursor()
             query=f"SELECT codigo,nombre,precio,img_producto FROM producto where nombre like '%{buscar}%' or marca like '%{buscar}%';"
             cursor1.execute(query)
-            tabla=[]
-            for x in cursor1:
-                tabla.append(x)
+            tabla=cursor1.fetchall()
         except Exception as e:
             print("Error MySQL:", str(e))
         db=ordenar_productos(tabla)
@@ -629,11 +657,12 @@ def mostrar_lista_carrito(request,response):
         contador_carrito(request,response,env)
         productos_carrito(request, response, env)
         medios_de_pago(request, response, env)
+        rol_admin(request,response,env)
         lista={}
         articulos=mi_carrito.mostrar_productos()
         if articulos!=0:
             try:
-                conexion1=mysql.connector.connect(host="localhost",user="julian",password="123456789",database="bd_practica")
+                conexion1=conexion_db()
                 cursor1=conexion1.cursor()
                 for x in articulos:
                     query=f"SELECT nombre FROM producto where codigo={x[0]}"
@@ -668,6 +697,7 @@ def confirmar_compra(request,response):
         contador_carrito(request,response,env)
         productos_carrito(request, response, env)
         medios_de_pago(request, response, env)
+        rol_admin(request,response,env)
         medio_pago=request.GET.get('medio_pago')
         fecha=datetime.datetime.now()
         total_venta=mi_carrito.calcular_total()
