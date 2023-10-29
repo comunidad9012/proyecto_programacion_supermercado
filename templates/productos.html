@@ -10,7 +10,7 @@
         {%for y in x%}
         <div class="col-md-4">
             <div class="card h-100">
-                <img src="{{ y[-1] }}" class="card-img-top" alt="...">
+                <img src="{{ y[-1] }}?timestamp=123456789" class="card-img-top" cache="no-store">
                 <div class="card-body">
                     {%if y[0] in botones%}
                     <h6>Agregado al carrito</h6>

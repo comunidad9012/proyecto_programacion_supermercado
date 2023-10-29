@@ -1,0 +1,27 @@
+{% extends './layout_admin.html' %}
+{% block tittle %}probando{% endblock %}
+{% block body %}
+<div class="container text-center mt-4">
+    <h1 class="display-4">Productos</h1>
+    <a href="/cargar_producto" class="btn btn-success mx-2"><i class="bi bi-plus-lg"></i>Nuevo producto</a>
+</div>
+<div class="container text-center mt-4">
+    {%for x in db%}
+    <div class="row mb-4">
+        {%for y in x%}
+        <div class="col-md-4">
+            <div class="card h-100">
+                <img src="{{ y[-1] }}?timestamp=123456789" class="card-img-top" cache="no-store">
+                <div class="card-body">                    
+                    <h2>{{ y[1] }}</h2>
+                    <h2>${{y[2]}}</h2>
+                    <a href="" name="id_producto" value="{{ y[0] }}" class="btn btn-warning mx-2">Editar</a>
+                    <a href="" name="id_producto" value="{{ y[0] }}" class="btn btn-danger mx-2">Eliminar</a>
+                </div>
+            </div>
+        </div>
+        {%endfor%}
+    </div>
+    {%endfor%}  
+</div>
+{% endblock %}

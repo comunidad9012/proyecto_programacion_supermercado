@@ -4,6 +4,7 @@ from jinja2 import Environment, FileSystemLoader
 from webob import Request, Response
 from whitenoise import WhiteNoise
 import os
+import shutil
 import mysql.connector
 import datetime
 import random
@@ -203,6 +204,37 @@ def rol_admin(request,response,env):
     else:
         env.globals["administrador"]=0
 
+def proveedor(request,response,env):
+    try:
+        conexion1=conexion_db()
+        cursor1=conexion1.cursor()
+        cursor1.execute("SELECT id_proveedor,nom_proveedor,ap_proveedor FROM proveedor;")
+        lista=cursor1.fetchall()
+        datos=[]
+        for x in lista:
+            linea=[]
+            linea.append(x[0])
+            nom=x[1]+" "+x[2]
+            linea.append(nom)
+            datos.append(linea)
+        env.globals["proveedores"]=datos
+        cursor1.close()
+        conexion1.close()
+    except Exception as e:
+        print("Error MySQL:", str(e))
+
+def medidas(request,response,env):
+    try:
+        conexion1=conexion_db()
+        cursor1=conexion1.cursor()
+        cursor1.execute("SELECT id_medida,nombre_medida FROM unidad_medida;")
+        datos=cursor1.fetchall()
+        env.globals["medidas"]=datos
+        cursor1.close()
+        conexion1.close()
+    except Exception as e:
+        print("Error MySQL:", str(e))
+
 def categorias(request, response, env):
     try:
         conexion1=conexion_db()
@@ -275,15 +307,44 @@ def inicio(request, response):
         return response
 # ----------VISTA ADMINISTRADOR-----------
 
-@app.ruta("/prueba")
-def inicio(request, response):
+@app.ruta("/productos_administrador")
+def productos_administrador(request, response):
     categorias(request, response, env)
     marcas(request, response, env)
     productos_carrito(request, response, env)
     contador_carrito(request,response,env)
     rol_admin(request,response,env)
     if usuario.acceso==True and usuario.administrador==True:
-        template = env.get_template("admin.html")
+        try:
+            conexion1=conexion_db()
+            cursor1=conexion1.cursor()
+            cursor1.execute("SELECT codigo,nombre,precio,img_producto FROM producto;")
+            tabla=cursor1.fetchall()
+        except Exception as e:
+            print("Error MySQL:", str(e))
+        db=ordenar_productos(tabla)
+        template = env.get_template("productos_admin.html")
+        rendered_html = template.render(db=db)
+        response=Response()
+        response.text = rendered_html
+        return response
+    else:
+        response=Response()
+        response.status_code = 302
+        response.headers['Location'] = '/home'
+        return response
+
+@app.ruta("/cargar_producto")
+def cargar_producto(request, response):
+    categorias(request, response, env)
+    marcas(request, response, env)
+    productos_carrito(request, response, env)
+    contador_carrito(request,response,env)
+    rol_admin(request,response,env)
+    proveedor(request,response,env)
+    medidas(request,response,env)
+    if usuario.acceso==True and usuario.administrador==True:
+        template = env.get_template("formulario_producto.html")
         rendered_html = template.render()
         response=Response()
         response.text = rendered_html
@@ -293,6 +354,35 @@ def inicio(request, response):
         response.status_code = 302
         response.headers['Location'] = '/home'
         return response
+
+@app.ruta("/cargar_producto_db",methods=['POST'])
+def producto_db(request,response):
+    nombre=request.POST.get('nombre')
+    precio=request.POST.get('precio')
+    cantidad=request.POST.get('cantidad')
+    marca=request.POST.get('marca')
+    categoria=request.POST.get('categoria')
+    proveedor=request.POST.get('proveedor')
+    tamaño=request.POST.get('tamaño')
+    medida=request.POST.get('medida')
+    imagen=request.POST.get('imagen')
+    nom_img=imagen.filename
+    carpeta=os.path.join("static", nom_img)
+    with open(carpeta,'wb') as archivo:
+        shutil.copyfileobj(imagen.file,archivo)
+    try:
+        conexion1=conexion_db()
+        cursor1=conexion1.cursor()
+        query=f"INSERT INTO `bd_practica`.`producto` (`nombre`, `precio`, `cantidad`, `marca`, `categoria_producto`, `proveedor_producto`, `tamaño`, `um_producto`, `img_producto`) VALUES ('{nombre}', '{precio}', '{cantidad}', '{marca}', '{categoria}', '{proveedor}', '{tamaño}', '{medida}', '{nom_img}');"
+        print(query)
+        cursor1.execute(query)
+        conexion1.commit()
+    except Exception as e:
+        print("Error MySQL:", str(e))
+    response=Response()
+    response.status_code = 302
+    response.headers['Location'] = '/productos_administrador'
+    return response
    
 # --------- VISTAS CLIENTE ---------------
 @app.ruta("/registro")
@@ -443,7 +533,7 @@ def validar_inicio(request,response):
         return response
 
 @app.ruta("/home")
-def inicio(request, response):
+def home(request, response):
     if usuario.acceso==True:
         categorias(request, response, env)
         marcas(request, response, env)
