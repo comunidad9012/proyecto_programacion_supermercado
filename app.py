@@ -170,13 +170,27 @@ class Carrito:
             for x in self.articulos:
                 query=f"INSERT INTO `bd_practica`.`detalle_pedido` (`codigo_producto`, `codigo_pedido`, `cantidad_producto`, `precio_producto`) VALUES ('{x[0]}', '{self.id_pedido}', '{x[1]}', '{x[2]}');"
                 cursor1.execute(query)
+                query=f"select cantidad from producto where codigo={x[0]};"
+                cursor1.execute(query)
+                stock=cursor1.fetchone()
+                stock=stock[0]
+                stock=stock-x[1]
+                query=f"select vendidos from producto where codigo={x[0]};"
+                cursor1.execute(query)
+                vendidos=cursor1.fetchone()
+                if vendidos[0] is None:
+                    vendidos=x[1]
+                else:
+                    vendidos=vendidos[0]+x[1]
+                query=f"UPDATE `producto` SET `cantidad` = '{stock}',`vendidos` = '{vendidos}' WHERE (`codigo` = '{x[0]}');"
+                cursor1.execute(query)
                 conexion1.commit()
-            self.articulos=[]
         except Exception as e:
             print("Error MySQL:", str(e))
         finally:
             cursor1.close()
             conexion1.close()
+        self.articulos=[]
         
 mi_carrito=Carrito()
 usuario=Sesion()
@@ -285,6 +299,8 @@ def productos_carrito(request, response, env):
         for x in lista:
             ids.append(int(x[0]))
         env.globals["botones"]=ids
+    else:
+        env.globals["botones"]=ids
 
 #----INICIO SESION-------
 @app.ruta("/")
@@ -318,7 +334,7 @@ def productos_administrador(request, response):
         try:
             conexion1=conexion_db()
             cursor1=conexion1.cursor()
-            cursor1.execute("SELECT codigo,nombre,precio,img_producto FROM producto;")
+            cursor1.execute("SELECT codigo,nombre,precio,img_producto FROM producto order by nombre;")
             tabla=cursor1.fetchall()
         except Exception as e:
             print("Error MySQL:", str(e))
@@ -374,7 +390,6 @@ def producto_db(request,response):
         conexion1=conexion_db()
         cursor1=conexion1.cursor()
         query=f"INSERT INTO `bd_practica`.`producto` (`nombre`, `precio`, `cantidad`, `marca`, `categoria_producto`, `proveedor_producto`, `tamaño`, `um_producto`, `img_producto`) VALUES ('{nombre}', '{precio}', '{cantidad}', '{marca}', '{categoria}', '{proveedor}', '{tamaño}', '{medida}', '{nom_img}');"
-        print(query)
         cursor1.execute(query)
         conexion1.commit()
     except Exception as e:
@@ -543,19 +558,11 @@ def home(request, response):
         try:
             conexion1=conexion_db()
             cursor1=conexion1.cursor()
-            cursor1.execute("select codigo,nombre,precio,img_producto,tipo_descuento from producto inner join descuento on descuento_producto=id_descuento;")
+            cursor1.execute("select codigo,nombre,precio,img_producto from producto order by vendidos desc limit 9;")
             tabla=cursor1.fetchall()
         except Exception as e:
             print("Error MySQL:", str(e))
-        descuento=[]
-        for x in tabla:
-            x=list(x)
-            desc=x[2]*(x[4]/100)
-            desc=x[2]-desc
-            x.append(desc)
-            x=tuple(x)
-            descuento.append(x)
-        db=ordenar_productos(descuento)
+        db=ordenar_productos(tabla)
         template = env.get_template("index.html")
         rendered_html = template.render(db=db)
         response=Response()
@@ -604,7 +611,7 @@ def productos(request, response):
         try:
             conexion1=conexion_db()
             cursor1=conexion1.cursor()
-            cursor1.execute("SELECT codigo,nombre,precio,img_producto FROM producto;")
+            cursor1.execute("SELECT codigo,nombre,precio,img_producto FROM producto order by nombre;")
             tabla=cursor1.fetchall()
         except Exception as e:
             print("Error MySQL:", str(e))
@@ -632,7 +639,7 @@ def filtro_categoria(request,response):
         try:
             conexion1=conexion_db()
             cursor1=conexion1.cursor()
-            query=f'SELECT codigo,nombre,precio,img_producto FROM producto where categoria_producto={id_categoria};'
+            query=f'SELECT codigo,nombre,precio,img_producto FROM producto where categoria_producto={id_categoria} order by nombre;'
             cursor1.execute(query)
             tabla=cursor1.fetchall()
         except Exception as e:
@@ -661,7 +668,7 @@ def filtro_marca(request,response):
         try:
             conexion1=conexion_db()
             cursor1=conexion1.cursor()
-            query=f'SELECT codigo,nombre,precio,img_producto FROM producto where marca={id_marca};'
+            query=f'SELECT codigo,nombre,precio,img_producto FROM producto where marca={id_marca} order by nombre;'
             cursor1.execute(query)
             tabla=cursor1.fetchall()
         except Exception as e:
@@ -700,6 +707,7 @@ def eliminar_del_carrito(request,response):
     if usuario.acceso==True:
         id_producto = request.POST.get('id_producto')
         mi_carrito.eliminar_producto(id_producto)
+        productos_carrito(request,response,env)
         response=Response()
         response.status_code = 302
         response.headers['Location'] = '/carrito'
@@ -784,7 +792,6 @@ def confirmar_compra(request,response):
     if usuario.acceso==True:
         categorias(request, response, env)
         marcas(request, response, env)
-        contador_carrito(request,response,env)
         productos_carrito(request, response, env)
         medios_de_pago(request, response, env)
         rol_admin(request,response,env)

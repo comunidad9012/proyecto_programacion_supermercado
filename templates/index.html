@@ -2,7 +2,7 @@
 {% block tittle %}probando{% endblock %}
 {% block body %}
 <div class="container text-center mt-4">
-<h1 class="display-4">Ofertas</h1>
+<h1 class="display-4">Productos más vendidos</h1>
 </div>
 <div class="container text-center mt-4">
     {%for x in db%}
@@ -17,9 +17,7 @@
                     {%else%}
                     <form method="POST" action="/agregar_al_carrito">
                         <h2>{{ y[1] }}</h2>
-                        <h2><s>${{y[2]}}</s></h2>
-                        <h2>%{{y[-2]}}</h2>
-                        <h2>${{y[-1]}}</h2>
+                        <h2>${{y[2]}}</h2>
                         <input type="hidden" name="precio" value="{{ y[2] }}">
                         <div class="form-floating mb-3">
                             <input type="number" class="form-control" name="cantidad" value="1" min="1" id="cantidad">
