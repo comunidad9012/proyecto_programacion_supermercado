@@ -11,12 +11,16 @@
         {%for y in x%}
         <div class="col-md-4">
             <div class="card h-100">
-                <img src="{{ y[-1] }}?timestamp=123456789" class="card-img-top" cache="no-store">
+                <img src="{{ y[3] }}?timestamp=123456789" class="card-img-top" cache="no-store">
                 <div class="card-body">                    
                     <h2>{{ y[1] }}</h2>
                     <h2>${{y[2]}}</h2>
                     <a href="/editar_producto?id_producto={{ y[0] }}" class="btn btn-warning mx-2">Editar</a>
-                    <a href="" name="id_producto" value="{{ y[0] }}" class="btn btn-danger mx-2">Eliminar</a>
+                    {%if y[4]==1%}
+                    <a href="/cambiar_estado_producto?id_producto={{ y[0] }}" class="btn btn-danger mx-2">Desactivar producto</a>
+                    {%else%}
+                    <a href="/cambiar_estado_producto?id_producto={{ y[0] }}" class="btn btn-success mx-2">Activar producto</a>
+                    {%endif%}
                 </div>
             </div>
         </div>

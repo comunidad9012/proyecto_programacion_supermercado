@@ -334,7 +334,7 @@ def productos_administrador(request, response):
         try:
             conexion1=conexion_db()
             cursor1=conexion1.cursor()
-            cursor1.execute("SELECT codigo,nombre,precio,img_producto FROM producto order by nombre;")
+            cursor1.execute("SELECT codigo,nombre,precio,img_producto,estado FROM producto order by nombre;")
             tabla=cursor1.fetchall()
         except Exception as e:
             print("Error MySQL:", str(e))
@@ -487,6 +487,32 @@ def actualizar_producto(request,response):
         query=f"UPDATE `producto` SET `nombre` = '{nombre}',`precio` = '{precio}',`cantidad` = '{cantidad}',`marca` = '{marca}',`categoria_producto` = '{categoria}',`proveedor_producto` = '{proveedor}',`tamaño` = '{tamaño}',`um_producto` = '{medida}',`img_producto` = '{nom_img}' WHERE (`codigo` = '{id}');"
         cursor1.execute(query)
         conexion1.commit()
+    except Exception as e:
+        print("Error MySQL:", str(e))
+    response=Response()
+    response.status_code = 302
+    response.headers['Location'] = '/productos_administrador'
+    return response
+
+@app.ruta("/cambiar_estado_producto",methods=['GET'])
+def cambiar_estado_producto(request,response):
+    id_producto=request.GET.get('id_producto')
+    
+    try:
+        conexion1=conexion_db()
+        cursor1=conexion1.cursor()
+        query=f"select estado from producto where codigo={id_producto};"
+        cursor1.execute(query)
+        estado=cursor1.fetchone()
+        estado=estado[0]
+        if estado==0:
+            query=f"UPDATE `producto` SET `estado` = 1 WHERE (`codigo` = '{id_producto}');"
+            cursor1.execute(query)
+            conexion1.commit()
+        elif estado==1:
+            query=f"UPDATE `producto` SET `estado` = 0 WHERE (`codigo` = '{id_producto}');"
+            cursor1.execute(query)
+            conexion1.commit()
     except Exception as e:
         print("Error MySQL:", str(e))
     response=Response()
@@ -653,7 +679,7 @@ def home(request, response):
         try:
             conexion1=conexion_db()
             cursor1=conexion1.cursor()
-            cursor1.execute("select codigo,nombre,precio,img_producto from producto order by vendidos desc limit 9;")
+            cursor1.execute("select codigo,nombre,precio,img_producto from producto where estado=1 order by vendidos desc limit 9;")
             tabla=cursor1.fetchall()
         except Exception as e:
             print("Error MySQL:", str(e))
@@ -706,7 +732,7 @@ def productos(request, response):
         try:
             conexion1=conexion_db()
             cursor1=conexion1.cursor()
-            cursor1.execute("SELECT codigo,nombre,precio,img_producto FROM producto order by nombre;")
+            cursor1.execute("SELECT codigo,nombre,precio,img_producto FROM producto where estado=1 order by nombre;")
             tabla=cursor1.fetchall()
         except Exception as e:
             print("Error MySQL:", str(e))
@@ -734,7 +760,7 @@ def filtro_categoria(request,response):
         try:
             conexion1=conexion_db()
             cursor1=conexion1.cursor()
-            query=f'SELECT codigo,nombre,precio,img_producto FROM producto where categoria_producto={id_categoria} order by nombre;'
+            query=f'SELECT codigo,nombre,precio,img_producto FROM producto where estado=1 and categoria_producto={id_categoria} order by nombre;'
             cursor1.execute(query)
             tabla=cursor1.fetchall()
         except Exception as e:
@@ -763,7 +789,7 @@ def filtro_marca(request,response):
         try:
             conexion1=conexion_db()
             cursor1=conexion1.cursor()
-            query=f'SELECT codigo,nombre,precio,img_producto FROM producto where marca={id_marca} order by nombre;'
+            query=f'SELECT codigo,nombre,precio,img_producto FROM producto where estado=1 and marca={id_marca} order by nombre;'
             cursor1.execute(query)
             tabla=cursor1.fetchall()
         except Exception as e:
@@ -825,7 +851,7 @@ def buscar_producto(request,response):
         try:
             conexion1=conexion_db()
             cursor1=conexion1.cursor()
-            query=f"SELECT codigo,nombre,precio,img_producto FROM producto where nombre like '%{buscar}%' or marca like '%{buscar}%';"
+            query=f"SELECT codigo,nombre,precio,img_producto FROM producto inner join marcas on marca=id_marcas inner join categoria on categoria_producto=id_categoria where estado=1 and nombre like '%{buscar}%' or nombre_marca like '%{buscar}%' or nombre_categoria like '%{buscar}%';"
             cursor1.execute(query)
             tabla=cursor1.fetchall()
         except Exception as e:
