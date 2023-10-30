@@ -372,8 +372,9 @@ def cargar_producto(request, response):
         return response
 
 @app.ruta("/cargar_producto_db",methods=['POST'])
-def producto_db(request,response):
+def cargar_producto_db(request,response):
     nombre=request.POST.get('nombre')
+    nombre=nombre.title()
     precio=request.POST.get('precio')
     cantidad=request.POST.get('cantidad')
     marca=request.POST.get('marca')
@@ -398,7 +399,101 @@ def producto_db(request,response):
     response.status_code = 302
     response.headers['Location'] = '/productos_administrador'
     return response
-   
+
+@app.ruta("/editar_producto",methods=['GET'])
+def editar_producto(request,response):
+    categorias(request, response, env)
+    marcas(request, response, env)
+    productos_carrito(request, response, env)
+    contador_carrito(request,response,env)
+    rol_admin(request,response,env)
+    proveedor(request,response,env)
+    medidas(request,response,env)
+    id_producto=request.GET.get('id_producto')
+    if usuario.acceso==True and usuario.administrador==True:
+        try:
+            conexion1=conexion_db()
+            cursor1=conexion1.cursor()
+            query=f"select * from producto where codigo={id_producto};"
+            cursor1.execute(query)
+            tabla=cursor1.fetchone()
+            producto={}
+            producto['id_producto']=tabla[0]            
+            producto['nombre']=tabla[1]
+            producto['precio']=tabla[2]
+            producto['cantidad']=tabla[3]
+            query=f'select * from marcas where id_marcas={tabla[4]}'
+            cursor1.execute(query)
+            x=cursor1.fetchone()
+            producto['id_marca']=x[0]
+            producto['nombre_marca']=x[1]
+            query=f'select * from categoria where id_categoria={tabla[5]}'
+            cursor1.execute(query)
+            x=cursor1.fetchone()
+            producto['id_categoria']=x[0]
+            producto['nombre_categoria']=x[1]
+            query=f'select id_proveedor,nom_proveedor,ap_proveedor from proveedor where id_proveedor={tabla[6]}'
+            cursor1.execute(query)
+            x=cursor1.fetchone()
+            n=x[1]+" "+x[2]
+            producto['id_proveedor']=x[0]
+            producto['nombre_proveedor']=n
+            producto['tamaño']=tabla[7]
+            query=f'select * from unidad_medida where id_medida={tabla[8]}'
+            cursor1.execute(query)
+            x=cursor1.fetchone()
+            producto['id_medida']=x[0]
+            producto['nombre_medida']=x[1]
+            producto['imagen']=tabla[9]
+        except Exception as e:
+            print("Error MySQL:", str(e))
+        template = env.get_template("editar_producto.html")
+        rendered_html = template.render(producto=producto)
+        response=Response()
+        response.text = rendered_html
+        return response
+    else:
+        response=Response()
+        response.status_code = 302
+        response.headers['Location'] = '/home'
+        return response
+
+@app.ruta("/actualizar_producto",methods=["POST"])
+def actualizar_producto(request,response):
+    id=request.POST.get('id_producto')
+    nombre=request.POST.get('nombre')
+    nombre=nombre.title()
+    precio=request.POST.get('precio')
+    cantidad=request.POST.get('cantidad')
+    marca=request.POST.get('marca')
+    categoria=request.POST.get('categoria')
+    proveedor=request.POST.get('proveedor')
+    tamaño=request.POST.get('tamaño')
+    medida=request.POST.get('medida')
+    nuevaimagen=request.POST.get('nueva_imagen')
+    imagenvieja=request.POST.get('imagen')
+    if nuevaimagen is not None:
+        nom_img=nuevaimagen.filename
+        carpeta=os.path.join("static", nom_img)
+        ubicacionvieja=os.path.join("static",imagenvieja)
+        os.remove(ubicacionvieja)
+        with open(carpeta,'wb') as archivo:
+            shutil.copyfileobj(nuevaimagen.file,archivo)
+    else:
+        nom_img=imagenvieja.filename
+    try:
+        conexion1=conexion_db()
+        cursor1=conexion1.cursor()
+        query=f"UPDATE `producto` SET `nombre` = '{nombre}',`precio` = '{precio}',`cantidad` = '{cantidad}',`marca` = '{marca}',`categoria_producto` = '{categoria}',`proveedor_producto` = '{proveedor}',`tamaño` = '{tamaño}',`um_producto` = '{medida}',`img_producto` = '{nom_img}' WHERE (`codigo` = '{id}');"
+        cursor1.execute(query)
+        conexion1.commit()
+    except Exception as e:
+        print("Error MySQL:", str(e))
+    response=Response()
+    response.status_code = 302
+    response.headers['Location'] = '/productos_administrador'
+    return response
+
 # --------- VISTAS CLIENTE ---------------
 @app.ruta("/registro")
 def registro_usuario(request,response):
@@ -470,7 +565,7 @@ def cerrar_sesion_actual(request,response):
         return response
 
 @app.ruta("/editar_usuario")
-def cuenta(request,response):
+def editar_cuenta(request,response):
     categorias(request, response, env)
     marcas(request, response, env)
     productos_carrito(request, response, env)

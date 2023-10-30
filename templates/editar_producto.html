@@ -1,0 +1,88 @@
+{% extends './layout_admin.html' %}
+{% block tittle %}probando{% endblock %}
+{% block body %}
+<div class="container text-center mt-4">
+    <h6 class="display-6">Editar producto</h6>
+</div>
+<div class="container text-center mt-4">
+    <form action="/actualizar_producto" method="POST" enctype="multipart/form-data">
+      <div class="row  mx-auto d-flex justify-content-center align-items-center">
+        <div class="col-md-4">
+          <label for="nombre" class="form-label">Nombre del producto</label>
+          <input type="text" class="form-control" id="nombre" name="nombre" value="{{producto.nombre}}" required>
+        </div>
+        <div class="col-md-2"> 
+          <label for="precio" class="form-label">Precio</label>
+          <input type="number" class="form-control" id="precio" name="precio" value="{{producto.precio}}" required>
+        </div>
+      </div>
+      <div class="row  mx-auto d-flex justify-content-center align-items-center">
+        <div class="col-md-2">
+          <label for="cantidad" class="form-label">Cantidad (stock)</label>
+          <input type="number" class="form-control" id="cantidad" name="cantidad" value="{{producto.cantidad}}" required>
+        </div>
+        <div class="col-md-4"> 
+            <label for="marca" class="form-label">Marca</label>
+            <select class="form-select form-control " id="marca" name="marca" required>
+                <option value="{{producto.id_marca}}" >{{producto.nombre_marca}}</option>
+                {% for x in marcas %}
+                <option value="{{x[0]}}">{{x[1]}}</option>
+                {%endfor%}
+            </select>
+        </div>
+      </div>
+      <div class="row mt-2 mx-auto d-flex justify-content-center align-items-center">
+        <div class="col-md-3">
+            <label for="categoria" class="form-label">Categoria</label>
+            <select class="form-select form-control " id="categoria" name="categoria" required>
+                <option value="{{producto.id_categoria}}" >{{producto.nombre_categoria}}</option>
+                {% for x in categorias %}
+                <option value="{{x[0]}}">{{x[1]}}</option>
+                {%endfor%}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label for="proveedor" class="form-label">Proveedor</label>
+            <select class="form-select form-control " id="proveedor" name="proveedor" required>
+                <option value="{{producto.id_proveedor}}">{{producto.nombre_proveedor}}</option>
+                {% for x in proveedores %}
+                <option value="{{x[0]}}">{{x[1]}}</option>
+                {%endfor%}
+            </select>
+        </div>
+      </div>
+      <div class="row mt-2 mx-auto d-flex justify-content-center align-items-center">
+        <div class="col-md-3">
+            <label for="tamaño" class="form-label">Tamaño</label>
+            <input type="number" class="form-control" id="tamaño" name="tamaño" value="{{producto.tamaño}}" required>
+        </div>
+        <div class="col-md-3">
+            <label for="medida" class="form-label">Unidad de medida</label>
+            <select class="form-select form-control " id="medida" name="medida" required>
+                <option value="{{producto.id_medida}}">{{producto.nombre_medida}}</option>
+                {% for x in medidas %}
+                <option value="{{x[0]}}">{{x[1]}}</option>
+                {%endfor%}
+            </select>
+        </div>
+      </div>
+      <div class="row mt-2 mx-auto d-flex justify-content-center align-items-center">
+        <div class="col-md-4">
+            
+            <label for="imagen" class="form-label">Imagen</label>
+            <input class="form-control" type="file" name="nueva_imagen" id="imagen" accept="image/*">
+        </div>
+        <div class="col-md-2">
+            <img src="{{producto.imagen}}?timestamp=123456789" width="200" height="200" cache="no-store">
+            <input type="hidden" name="imagen" value="{{producto.imagen}}">
+            <input type="hidden" name="id_producto" value="{{producto.id_producto}}">
+        </div>
+      </div>
+      <div class="row mt-4 mx-auto d-flex justify-content-center align-items-center">
+        <div class="col-12">
+          <button type="submit" class="btn btn-primary">Actualizar producto</button>
+        </div>
+      </div>
+    </form>
+</div>
+{% endblock %}
