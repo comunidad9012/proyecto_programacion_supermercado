@@ -470,6 +470,7 @@ def actualizar_producto(request,response):
     proveedor=request.POST.get('proveedor')
     tamaño=request.POST.get('tamaño')
     medida=request.POST.get('medida')
+    #revisar el error aca
     nuevaimagen=request.POST.get('nueva_imagen')
     imagenvieja=request.POST.get('imagen')
     if nuevaimagen is not None:
