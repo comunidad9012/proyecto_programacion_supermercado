@@ -432,19 +432,13 @@ def editar_producto(request,response):
             x=cursor1.fetchone()
             producto['id_categoria']=x[0]
             producto['nombre_categoria']=x[1]
-            query=f'select id_proveedor,nom_proveedor,ap_proveedor from proveedor where id_proveedor={tabla[6]}'
-            cursor1.execute(query)
-            x=cursor1.fetchone()
-            n=x[1]+" "+x[2]
-            producto['id_proveedor']=x[0]
-            producto['nombre_proveedor']=n
-            producto['tamaño']=tabla[7]
-            query=f'select * from unidad_medida where id_medida={tabla[8]}'
+            producto['tamaño']=tabla[6]
+            query=f'select * from unidad_medida where id_medida={tabla[7]}'
             cursor1.execute(query)
             x=cursor1.fetchone()
             producto['id_medida']=x[0]
             producto['nombre_medida']=x[1]
-            producto['imagen']=tabla[9]
+            producto['imagen']=tabla[8]
         except Exception as e:
             print("Error MySQL:", str(e))
         template = env.get_template("editar_producto.html")
@@ -467,13 +461,11 @@ def actualizar_producto(request,response):
     cantidad=request.POST.get('cantidad')
     marca=request.POST.get('marca')
     categoria=request.POST.get('categoria')
-    proveedor=request.POST.get('proveedor')
     tamaño=request.POST.get('tamaño')
     medida=request.POST.get('medida')
-    #revisar el error aca
     nuevaimagen=request.POST.get('nueva_imagen')
     imagenvieja=request.POST.get('imagen')
-    if nuevaimagen is not None:
+    if nuevaimagen != b'':
         nom_img=nuevaimagen.filename
         carpeta=os.path.join("static", nom_img)
         ubicacionvieja=os.path.join("static",imagenvieja)
@@ -481,11 +473,11 @@ def actualizar_producto(request,response):
         with open(carpeta,'wb') as archivo:
             shutil.copyfileobj(nuevaimagen.file,archivo)
     else:
-        nom_img=imagenvieja.filename
+        nom_img=imagenvieja
     try:
         conexion1=conexion_db()
         cursor1=conexion1.cursor()
-        query=f"UPDATE `producto` SET `nombre` = '{nombre}',`precio` = '{precio}',`cantidad` = '{cantidad}',`marca` = '{marca}',`categoria_producto` = '{categoria}',`proveedor_producto` = '{proveedor}',`tamaño` = '{tamaño}',`um_producto` = '{medida}',`img_producto` = '{nom_img}' WHERE (`codigo` = '{id}');"
+        query=f"UPDATE `producto` SET `nombre` = '{nombre}',`precio` = '{precio}',`cantidad` = '{cantidad}',`marca` = '{marca}',`categoria_producto` = '{categoria}',`tamaño` = '{tamaño}',`um_producto` = '{medida}',`img_producto` = '{nom_img}' WHERE (`codigo` = '{id}');"
         cursor1.execute(query)
         conexion1.commit()
     except Exception as e:
@@ -498,7 +490,6 @@ def actualizar_producto(request,response):
 @app.ruta("/cambiar_estado_producto",methods=['GET'])
 def cambiar_estado_producto(request,response):
     id_producto=request.GET.get('id_producto')
-    
     try:
         conexion1=conexion_db()
         cursor1=conexion1.cursor()
@@ -680,7 +671,7 @@ def home(request, response):
         try:
             conexion1=conexion_db()
             cursor1=conexion1.cursor()
-            cursor1.execute("select codigo,nombre,precio,img_producto from producto where estado=1 order by vendidos desc limit 9;")
+            cursor1.execute("select codigo,nombre,precio,cantidad,img_producto from producto where estado=1 order by vendidos desc limit 9;")
             tabla=cursor1.fetchall()
         except Exception as e:
             print("Error MySQL:", str(e))
@@ -733,7 +724,7 @@ def productos(request, response):
         try:
             conexion1=conexion_db()
             cursor1=conexion1.cursor()
-            cursor1.execute("SELECT codigo,nombre,precio,img_producto FROM producto where estado=1 order by nombre;")
+            cursor1.execute("SELECT codigo,nombre,precio,cantidad,img_producto FROM producto where estado=1 order by nombre;")
             tabla=cursor1.fetchall()
         except Exception as e:
             print("Error MySQL:", str(e))
@@ -761,7 +752,8 @@ def filtro_categoria(request,response):
         try:
             conexion1=conexion_db()
             cursor1=conexion1.cursor()
-            query=f'SELECT codigo,nombre,precio,img_producto FROM producto where estado=1 and categoria_producto={id_categoria} order by nombre;'
+            query=f'SELECT codigo,nombre,precio,cantidad,img_producto FROM producto where estado=1 and categoria_producto={id_categoria} order by nombre;'
+            print(query)
             cursor1.execute(query)
             tabla=cursor1.fetchall()
         except Exception as e:
@@ -790,7 +782,7 @@ def filtro_marca(request,response):
         try:
             conexion1=conexion_db()
             cursor1=conexion1.cursor()
-            query=f'SELECT codigo,nombre,precio,img_producto FROM producto where estado=1 and marca={id_marca} order by nombre;'
+            query=f'SELECT codigo,nombre,precio,cantidad,img_producto FROM producto where estado=1 and marca={id_marca} order by nombre;'
             cursor1.execute(query)
             tabla=cursor1.fetchall()
         except Exception as e:

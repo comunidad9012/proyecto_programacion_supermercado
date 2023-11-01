@@ -1,51 +1,42 @@
 {% extends './layout_admin.html' %}
 {% block tittle %}probando{% endblock %}
 {% block body %}
-<div class="container text-center mt-4">
+<div class="container text-center mt-2">
     <h6 class="display-6">Editar producto</h6>
 </div>
 <div class="container text-center mt-4">
     <form action="/actualizar_producto" method="POST" enctype="multipart/form-data">
       <div class="row  mx-auto d-flex justify-content-center align-items-center">
-        <div class="col-md-4">
+        <div class="col-md-6">
           <label for="nombre" class="form-label">Nombre del producto</label>
           <input type="text" class="form-control" id="nombre" name="nombre" value="{{producto.nombre}}" required>
         </div>
-        <div class="col-md-2"> 
+      </div>
+      <div class="row  mx-auto d-flex justify-content-center align-items-center">
+        <div class="col-md-3">
+          <label for="cantidad" class="form-label">Cantidad (stock)</label>
+          <input type="number" class="form-control" id="cantidad" name="cantidad" value="{{producto.cantidad}}" required>
+        </div>
+        <div class="col-md-3"> 
           <label for="precio" class="form-label">Precio</label>
           <input type="number" class="form-control" id="precio" name="precio" value="{{producto.precio}}" required>
         </div>
       </div>
-      <div class="row  mx-auto d-flex justify-content-center align-items-center">
-        <div class="col-md-2">
-          <label for="cantidad" class="form-label">Cantidad (stock)</label>
-          <input type="number" class="form-control" id="cantidad" name="cantidad" value="{{producto.cantidad}}" required>
-        </div>
-        <div class="col-md-4"> 
-            <label for="marca" class="form-label">Marca</label>
-            <select class="form-select form-control " id="marca" name="marca" required>
-                <option value="{{producto.id_marca}}" >{{producto.nombre_marca}}</option>
-                {% for x in marcas %}
-                <option value="{{x[0]}}">{{x[1]}}</option>
-                {%endfor%}
-            </select>
-        </div>
-      </div>
       <div class="row mt-2 mx-auto d-flex justify-content-center align-items-center">
+        <div class="col-md-3"> 
+          <label for="marca" class="form-label">Marca</label>
+          <select class="form-select form-control " id="marca" name="marca" required>
+              <option value="{{producto.id_marca}}" >{{producto.nombre_marca}}</option>
+              {% for x in marcas %}
+              <option value="{{x[0]}}">{{x[1]}}</option>
+              {%endfor%}
+          </select>
+      </div>
         <div class="col-md-3">
             <label for="categoria" class="form-label">Categoria</label>
             <select class="form-select form-control " id="categoria" name="categoria" required>
                 <option value="{{producto.id_categoria}}" >{{producto.nombre_categoria}}</option>
                 {% for x in categorias %}
-                <option value="{{x[0]}}">{{x[1]}}</option>
-                {%endfor%}
-            </select>
-        </div>
-        <div class="col-md-3">
-            <label for="proveedor" class="form-label">Proveedor</label>
-            <select class="form-select form-control " id="proveedor" name="proveedor" required>
-                <option value="{{producto.id_proveedor}}">{{producto.nombre_proveedor}}</option>
-                {% for x in proveedores %}
                 <option value="{{x[0]}}">{{x[1]}}</option>
                 {%endfor%}
             </select>
@@ -83,6 +74,7 @@
           <button type="submit" class="btn btn-primary">Actualizar producto</button>
         </div>
       </div>
+      <br>
     </form>
 </div>
 {% endblock %}
